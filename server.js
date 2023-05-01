@@ -2,9 +2,12 @@ require('dotenv').config()
 const express = require('express');
 const app = express();
 const {Configuration, OpenAIApi} = require('openai');
+const bodyParser = require('body-parser');
 
+// support parsing of application/json type post data
+app.use(bodyParser.json());
 app.set('view engine', 'ejs');
-
+app.use(express.json());
 const PORT = process.env.PORT || 4000;
 
 const configuration = new Configuration({
@@ -18,7 +21,8 @@ app.get('/', async (req, res) => {
 })
 
 app.post('/palette', async (req, res) => {
-    let msg = req.body.msg || 'colors of italian flag';
+    const { msg } = req.body || 'Colors of italian flag';
+
     let prompt = `
     You are a color palette generating assistant that responds to text prompts for color palettes
     Your should generate color palettes that fit the theme, mood, or instructions in the prompt.
@@ -41,7 +45,8 @@ app.post('/palette', async (req, res) => {
         model: 'text-davinci-003',
         max_tokens:200,
     })
-    let data = response.data.choices[0].text;
+    let data = JSON.parse(response.data.choices[0].text);
+    res.json({colors: data})
 })
 
 app.listen(PORT, () => console.log(`App is running on PORT ${PORT}`))
